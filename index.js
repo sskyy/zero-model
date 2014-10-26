@@ -57,10 +57,8 @@ function extendListener(module) {
           return clonedModel[method].apply(clonedModel, arguments).then(done).catch(fail)
 
           function done(data){
-            if( data ){
-              bus.data(name + "." + method, data)
-              return data
-            }
+            bus.data(name + "." + method, data)
+            return data
           }
 
           function fail(err){
