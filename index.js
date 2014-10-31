@@ -68,9 +68,10 @@ function extendListener(module) {
                 where = _.omit(where,relationName)
               })
             }
-            console.log(model.relations, where)
 
             var replacedArgs = [where].concat(args.slice(1))
+            console.log(model.relations, where, replacedArgs)
+
             return clonedModel[method].apply(clonedModel, replacedArgs)
           }
         }
