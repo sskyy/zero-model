@@ -4,37 +4,8 @@ var Promise = require('bluebird'),
 
 
 var diskAdapter = require('sails-disk')
-//var mongoAdapter = require('sails-mongo')
+var mongoAdapter = require('sails-mongo')
 
-var config = {
-  adapters: {
-    'default': diskAdapter,
-    disk: diskAdapter,
-//    mongo : mongoAdapter
-  },
-  connections: {
-    localDisk: {
-      adapter: 'disk'
-    },
-//    mongo : {
-//      adapter : 'mongo'
-//    }
-  },
-  defaults: {
-    migrate: 'alter'
-  }
-};
-
-var lifeCycleCallback =[
-  'beforeCreate',
-  'beforeValidate',
-  'beforeDestroy',
-  'beforeUpdate',
-  'afterCreate',
-  'afterValidate',
-  'afterDestroy',
-  'afterUpdate'
-]
 
 function extendListener(module) {
   //TODO listen model:action
@@ -47,7 +18,7 @@ function extendListener(module) {
       module.listen[ name+'.'+method] ={
         "name" : method + "." + name,
         "function": function () {
-          ZERO.mlog("model","on ", name, method, arguments)
+          module.dep.logger.log("on", name, method)
           //this bus is a started forked bus or snapshot
           var bus = this,
             args = _.toArray(arguments)
@@ -56,7 +27,7 @@ function extendListener(module) {
           //we should use cloned orm model function, so inside the function we can trigger lifecycle callbacks
           var clonedModel = cloneModel(module.models[name], name, bus.snapshot())
 
-
+          console.log("fapply calling", name,method)
           return bus.fapply([name+"."+method].concat( args ), function(){
             return callModelMethod(clonedModel, method, args)
           })
@@ -70,7 +41,6 @@ function extendListener(module) {
             }
 
             var replacedArgs = [where].concat(args.slice(1))
-            console.log(model.relations, where, replacedArgs)
 
             return clonedModel[method].apply(clonedModel, replacedArgs)
           }
@@ -83,20 +53,6 @@ function extendListener(module) {
 function cloneModel( model,name, bus ){
 
   var clonedModel = _.clone( model )
-  //clonedModel._callbacks = _.cloneDeep(model._callbacks)
-  //
-  //lifeCycleCallback.forEach( function( callbackName){
-  //
-  //  clonedModel._callbacks[callbackName].push( function modelLifeCycleCallback( val,cb){
-  //    var transformCallbackName = callbackName.replace(/([a-z]+)([A-Z])([a-z]+)/,"$2$3.$1").toLowerCase()
-  //    bus.fire( name+"."+transformCallbackName, val).then( function(){
-  //      cb()
-  //    }).catch(function(err){
-  //      ZERO.error("LIFE CYCLE CALLBACK FAILED",err)
-  //      cb(name+"."+transformCallbackName + " failed" )
-  //    })
-  //  })
-  //})
 
   clonedModel.__proto__ = model
   return clonedModel
@@ -109,6 +65,24 @@ function cloneModel( model,name, bus ){
 module.exports = {
   deps : ['bus'],
   orm: new Waterline,
+  config : {
+    adapters: {
+      "default": diskAdapter,
+      disk: diskAdapter,
+      mongo : mongoAdapter
+    },
+    connections: {
+      localDisk: {
+        adapter: 'disk'
+      },
+      mongo : {
+        adapter : 'mongo'
+      }
+    },
+    defaults: {
+      migrate: 'alter'
+    }
+  },
   models : {},
   /**
    * 如果模块定义了 models 属性，则读取其中的每个 model 定义，并通过 waterline 来建立 orm 。
@@ -143,7 +117,7 @@ module.exports = {
     })
 
     return new Promise(function (resolve, reject) {
-      root.orm.initialize(config, function (err, models) {
+      root.orm.initialize(root.config, function (err, models) {
         if (err) return reject( err);
 
         _.extend( root.models , models.collections )
