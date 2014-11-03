@@ -29,7 +29,13 @@ function extendListener(module) {
 
           console.log("fapply calling", name,method)
           return bus.fapply([name+"."+method].concat( args ), function(){
-            return callModelMethod(clonedModel, method, args)
+            var result = callModelMethod(clonedModel, method, args)
+            result.catch(function(e){
+              return bus.error(e)
+            })
+
+            //don't return result.catch, this may disable error catch outside
+            return result
           })
 
           function callModelMethod(clonedModel, method, args){
