@@ -4,7 +4,7 @@ var Promise = require('bluebird'),
 
 
 var diskAdapter = require('sails-disk')
-var mongoAdapter = require('sails-mongo')
+//var mongoAdapter = require('sails-mongo')
 
 
 function extendListener(module) {
@@ -69,15 +69,15 @@ module.exports = {
     adapters: {
       "default": diskAdapter,
       disk: diskAdapter,
-      mongo : mongoAdapter
+      //mongo : mongoAdapter
     },
     connections: {
       localDisk: {
         adapter: 'disk'
       },
-      mongo : {
-        adapter : 'mongo'
-      }
+      //mongo : {
+      //  adapter : 'mongo'
+      //}
     },
     defaults: {
       migrate: 'alter'
