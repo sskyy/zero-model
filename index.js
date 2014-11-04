@@ -1,6 +1,7 @@
 var Promise = require('bluebird'),
   Waterline = require('waterline'),
-  _ = require('lodash')
+  _ = require('lodash'),
+  util = require('../../system/core/util')
 
 
 var diskAdapter = require('sails-disk')
@@ -101,17 +102,19 @@ module.exports = {
     if (!module.models) return
 
     _.forEach(module.models,function (model, identity) {
-      if( !model.identity ){
+      if(!_.isArray( module.models)){
         model.identity = identity
       }
       //add model placeholder here, so other modules may know what models are registered
-      if( root.models[model.identity]){
-        logger.warn("duplicated model definition :",model.identity,"from",root.name)
-      }else{
+      if( !root.models[model.identity]){
         root.models[model.identity] = _.defaults(model,{
           migrate : 'safe',
           connection : 'localDisk'
         })
+      }else if( model.alter ){
+        root.models[model.identity] = util.mergeDeep( root.models[model.identity],model )
+      }else{
+        root.dep.logger.warn("duplicated model definition :",model.identity,"from",root.name)
       }
     })
   },
@@ -133,7 +136,6 @@ module.exports = {
         //add listen to this module
         //manually use module bus to add listeners
         extendListener(root)
-//        ZERO.mlog("model","[after extend listener]", root.listen)
         root.dep.bus.expand(root)
         resolve()
       });
