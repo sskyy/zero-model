@@ -129,7 +129,9 @@ module.exports = {
       root.orm.initialize(root.config, function (err, models) {
         if (err) return reject( err);
 
-        _.extend( root.models , models.collections )
+        _.forEach( root.models ,function( m,name){
+          root.models[name] = _.defaults(models.collections[name],m )
+        })
         root.connections = models.connections;
 
 
