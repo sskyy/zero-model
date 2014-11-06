@@ -19,7 +19,7 @@ function extendListener(module) {
       module.listen[ name+'.'+method] ={
         "name" : method + "." + name,
         "function": function () {
-          module.dep.logger.log("on", name, method)
+          module.dep.logger.log("on", name, method )
           //this bus is a started forked bus or snapshot
           var bus = this,
             args = _.toArray(arguments)
@@ -27,9 +27,8 @@ function extendListener(module) {
 
           //we should use cloned orm model function, so inside the function we can trigger lifecycle callbacks
           var clonedModel = cloneModel(module.models[name], name, bus.snapshot())
-
-          console.log("fapply calling", name,method)
           return bus.fapply([name+"."+method].concat( args ), function(){
+
             var result = callModelMethod(clonedModel, method, args)
             result.catch(function(e){
               return bus.error(e)
@@ -48,7 +47,6 @@ function extendListener(module) {
             }
 
             var replacedArgs = [where].concat(args.slice(1))
-
             return clonedModel[method].apply(clonedModel, replacedArgs)
           }
         }
