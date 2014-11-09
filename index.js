@@ -14,7 +14,7 @@ function extendListener(module) {
 
   _.forEach( module.models, function( model, name){
 
-    ['find', 'create', 'update', 'destroy','findOne'].forEach(function (method) {
+    ['find', 'create', 'update', 'destroy','findOne',"findOrCreate"].forEach(function (method) {
 
       module.listen[ name+'.'+method] ={
         "name" : method + "." + name,
@@ -26,19 +26,21 @@ function extendListener(module) {
 
 
           //we should use cloned orm model function, so inside the function we can trigger lifecycle callbacks
-          var clonedModel = cloneModel(module.models[name], name, bus.snapshot())
+          var model = module.models[name]
           return bus.fapply([name+"."+method].concat( args ), function(){
 
-            var result = callModelMethod(clonedModel, method, args)
+            var result = callModelMethod(model, method, args).then(function( modelResult){
+              return modelResult
+            })
             result.catch(function(e){
               return bus.error(e)
             })
 
-            //don't return result.catch, this may disable error catch outside
+            //don't return result.catch(), this may mess up error catch outside
             return result
           })
 
-          function callModelMethod(clonedModel, method, args){
+          function callModelMethod(model, method, args){
             var where = _.omit(args[0],"populate")
             if( /^find/.test(method) && model.relations){
               _.forEach( model.relations, function( relationDef, relationName){
@@ -47,7 +49,7 @@ function extendListener(module) {
             }
 
             var replacedArgs = [where].concat(args.slice(1))
-            return clonedModel[method].apply(clonedModel, replacedArgs)
+            return model[method].apply(model, replacedArgs)
           }
         }
       }
@@ -55,13 +57,6 @@ function extendListener(module) {
   })
 }
 
-function cloneModel( model,name, bus ){
-
-  var clonedModel = _.clone( model )
-
-  clonedModel.__proto__ = model
-  return clonedModel
-}
 
 /**
  * 为所有定义了 models 属性的模块提供 orm 服务。
@@ -124,7 +119,7 @@ module.exports = {
     })
 
     return new Promise(function (resolve, reject) {
-      root.orm.initialize(root.config, function (err, models) {
+      root.orm.initialize(root.config, function (err, models){
         if (err) return reject( err);
 
         _.forEach( root.models ,function( m,name){
