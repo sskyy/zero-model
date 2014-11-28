@@ -1,6 +1,6 @@
 # zero-model #
 
-This module user [waterline](https://github.com/balderdashy/waterline) to create database connection for you.
+This module use [waterline](https://github.com/balderdashy/waterline) to create database connection for relier module.
 
 ## Usage ##
 

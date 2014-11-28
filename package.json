@@ -1,7 +1,10 @@
 {
   "name": "zero-model",
-  "version": "0.0.16",
-  "description": "zero module",
+  "version": "0.0.17",
+  "keywords": [
+    "zero module"
+  ],
+  "description": "This module use [waterline](https://github.com/balderdashy/waterline) to create database connection for relier module.",
   "zero": {
     "dependencies": {
       "bus": "^0.0.1",
